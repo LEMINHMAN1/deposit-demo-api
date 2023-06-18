@@ -1,6 +1,6 @@
 
 
-# wellness-booking-server
+# Deposit API
 
 ## Main Tech
 * Node version: v16.14.0
