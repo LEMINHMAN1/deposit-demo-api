@@ -87,3 +87,8 @@ passport.use('authenticate', new JwtStrategy(opts, (jwtPayload, done) => {
   var user = jwtPayload;
   done(null, user)
 }))
+
+
+exports.ping = async (req, res) => {
+  return res.status(200).send(`Pong at ${new Date()}`);
+};

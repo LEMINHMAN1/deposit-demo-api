@@ -18,6 +18,9 @@ const auth = ()=>{
     return passport.authenticate('authenticate')
 }
 
+// Test
+app.get('ping', auth(), authController.ping);
+
 // Authenticate
 app.post('/login', authController.login);
 app.post('/register', authController.register);
