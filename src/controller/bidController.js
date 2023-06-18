@@ -78,6 +78,7 @@ exports.bid = async (req, res) => {
           { email: found.data[0].bidUser },
           { $inc: { balance: found.data[0]?.currentPrice} }
         );
+        console.log("refund", found.data[0].bidUser )
 
         // Update bid info
         await coll.update(
@@ -90,6 +91,7 @@ exports.bid = async (req, res) => {
           { _id: ObjectID(_id) },
           { $inc: { balance: -Number(amount) } }
         );
+        console.log("chart", email )
 
         return res.status(200).send(true);
       }
