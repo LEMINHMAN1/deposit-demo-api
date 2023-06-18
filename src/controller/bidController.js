@@ -42,7 +42,7 @@ exports.get = async (req, res) => {
       dueDate: { $lt: moment().utc().toDate() },
     });
   } else if (filterType === "all") {
-    data = await coll.find({ userEmail: email });
+    data = await coll.find({});
   } else {
     return res
       .status(400)
@@ -53,31 +53,50 @@ exports.get = async (req, res) => {
 
 exports.bid = async (req, res) => {
   const user = req.user;
-  const {_id, email} = user;
+  const { _id, email } = user;
   const { amount, projectId } = req?.body;
   const coll = daos.collection(collection.BID);
+  const userColl = daos.collection(collection.USER);
 
-  const userInfo = await coll.find({ _id: ObjectID(_id) });
-  if(userInfo?.data){
-    const balance = userInfo.data.balance;
+  const userInfo = await userColl.find({ _id: ObjectID(_id) });
+  if (userInfo?.data) {
+    const balance = userInfo.data[0].balance;
     const found = await coll.find({ _id: ObjectID(projectId) });
     if (!isEmpty(found.data)) {
-      const highestPrice = found?.currentPrice || found?.startPrice;
-      if (Number(amount) > highestPrice) {
-        return res.status(400).send("Min price must be: " + (Number(amount) + 1));
-      }else if(Number(amount) > Number(balance)){
+      const highestPrice =
+        found.data[0]?.currentPrice || found.data[0]?.startPrice;
+      if (Number(amount) < highestPrice) {
+        return res
+          .status(400)
+          .send("Min price must be: " + (Number(amount) + 1));
+      } else if (Number(amount) > Number(balance)) {
         return res.status(400).send(`Your balance (${balance}$) isn't enough`);
-      }else{
-          let completed = await coll.update(
-              { _id: ObjectID(projectId) },
-              { $set: { currentPrice: Number(amount), bidUser: email } }
-            );
-            return res.status(200).send(completed);
+      } else {
+
+        // Refund money for bid user
+        await userColl.update(
+          { email: found.data[0].bidUser },
+          { $inc: { balance: found.data[0]?.currentPrice} }
+        );
+
+        // Update bid info
+        await coll.update(
+          { _id: ObjectID(projectId) },
+          { $set: { currentPrice: Number(amount), bidUser: email } }
+        );
+
+        // Charge
+        await userColl.update(
+          { _id: ObjectID(_id) },
+          { $inc: { balance: -Number(amount) } }
+        );
+
+        return res.status(200).send(true);
       }
     } else {
       return res.status(400).send("Data not found");
     }
-  }else{
+  } else {
     return res.status(400).send("Data not found");
   }
 };

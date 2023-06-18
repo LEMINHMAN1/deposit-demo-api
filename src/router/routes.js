@@ -33,3 +33,4 @@ app.patch('/bid/place-order', auth(), bidController.bid);
 
 // User
 app.patch('/user/deposit', auth(), userController.deposit);
+app.get('/user/get', auth(), userController.get);
