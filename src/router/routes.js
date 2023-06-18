@@ -19,7 +19,7 @@ const auth = ()=>{
 }
 
 // Test
-app.get('ping', auth(), authController.ping);
+app.get('/ping', authController.ping);
 
 // Authenticate
 app.post('/login', authController.login);
